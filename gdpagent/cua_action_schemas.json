@@ -1,0 +1,265 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "click",
+      "description": "Click on the element",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "element_description": {
+            "type": "string",
+            "description": "a detailed descriptions of which element to click on. This description should be at least a full sentence."
+          },
+          "button": {
+            "type": "string",
+            "description": "which mouse button to press can be \"left\", \"middle\", or \"right\"",
+            "default": "left",
+            "enum": ["left", "middle", "right"]
+          }
+        },
+        "required": ["element_description"],
+        "additionalProperties": false
+      },
+      "strict": false
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "double_click",
+      "description": "Double click on the element.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "element_description": {
+            "type": "string",
+            "description": "a detailed descriptions of which element to double click on. This description should be at least a full sentence."
+          },
+          "button": {
+            "type": "string",
+            "description": "which mouse button to press can be \"left\", \"middle\", or \"right\"",
+            "default": "left",
+            "enum": ["left", "middle", "right"]
+          }
+        },
+        "required": ["element_description"],
+        "additionalProperties": false
+      },
+      "strict": false
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "switch_window",
+      "description": "Switch to a different application window by its window ID and maximize it.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "window_id": {
+            "type": "string",
+            "description": "the window ID to switch to (e.g., \"0x03400006\")."
+          }
+        },
+        "required": ["window_id"],
+        "additionalProperties": false
+      },
+      "strict": false
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "close_window",
+      "description": "Close a window by its window ID. If no window ID is provided, closes the currently active/focused window.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "window_id": {
+            "type": "string",
+            "description": "Optional window ID to close (e.g., \"0x03400006\"). If not provided, closes the current window."
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "strict": false
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "open_app",
+      "description": "Open an application, Or open a file/folder with an application, then activate and maximize the window.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "app_name": {
+            "type": "string",
+            "description": "the name of the application to open. Supported applications include: 'visual_studio_code', 'google_chrome', 'chromium', 'firefox', 'libreoffice_writer', 'libreoffice_calc', 'libreoffice_impress', 'text_editor', 'files', 'terminal', 'thunderbird_mail', 'gui_image_manipulation_program', 'vlc_media_player', 'photo_viewer', 'pdf_viewer'. Please give the exact name as listed.",
+            "enum": ["visual_studio_code", "google_chrome", "chromium", "firefox", "libreoffice_writer", "libreoffice_calc", "libreoffice_impress", "text_editor", "files", "terminal", "thunderbird_mail", "gui_image_manipulation_program", "vlc_media_player", "photo_viewer", "pdf_viewer"]
+          },
+          "path": {
+            "type": "string",
+            "description": "optional absolute path to a file or folder to open with the application. The path must exist on the VM. Supported by all apps except Terminal. Examples: open a document with LibreOffice Writer, open a folder as workspace with Visual Studio Code, open an image with GIMP, or open a video with VLC."
+          }
+        },
+        "required": ["app_name"],
+        "additionalProperties": false
+      },
+      "strict": false
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "type",
+      "description": "Type text at the current cursor / focused input (use click first to focus the target).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "the text to type",
+            "default": ""
+          }
+        },
+        "required": ["text"],
+        "additionalProperties": false
+      },
+      "strict": false
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "drag",
+      "description": "Drag from the starting description to the ending description (CUA will locate both pixels).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "starting_description": {
+            "type": "string",
+            "description": "a very detailed description of where to start the drag action. This description should be at least a full sentence."
+          },
+          "ending_description": {
+            "type": "string",
+            "description": "a very detailed description of where to end the drag action. This description should be at least a full sentence."
+          }
+        },
+        "required": ["starting_description", "ending_description"],
+        "additionalProperties": false
+      },
+      "strict": false
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "scroll",
+      "description": "Scroll the window to the specified location.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "scroll_description": {
+            "type": "string",
+            "description": "Describe: 1. what direction to scroll. 2. What do you want to see after scrolling."
+          }
+        },
+        "required": ["scroll_description"],
+        "additionalProperties": false
+      },
+      "strict": false
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "move",
+      "description": "Move the mouse cursor to the described element.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "element_description": {
+            "type": "string",
+            "description": "a detailed description of which element/point to move the mouse to."
+          }
+        },
+        "required": ["element_description"],
+        "additionalProperties": false
+      },
+      "strict": false
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "hotkey",
+      "description": "Press a hotkey combination",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "description": "the keys to press in combination in a list format (e.g. ['ctrl', 'c'])",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["keys"],
+        "additionalProperties": false
+      },
+      "strict": false
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "hold_and_press",
+      "description": "Hold a list of keys and press a list of keys",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "hold_keys": {
+            "type": "array",
+            "description": "list of keys to hold",
+            "items": {
+              "type": "string"
+            }
+          },
+          "press_keys": {
+            "type": "array",
+            "description": "list of keys to press in a sequence",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["hold_keys", "press_keys"],
+        "additionalProperties": false
+      },
+      "strict": false
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "wait",
+      "description": "Wait for a specified amount of time",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "time": {
+            "type": "number",
+            "description": "the amount of time to wait in seconds"
+          }
+        },
+        "required": ["time"],
+        "additionalProperties": false
+      },
+      "strict": false
+    }
+  }
+]

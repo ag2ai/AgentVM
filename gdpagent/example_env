@@ -1,0 +1,8 @@
+MODEL=
+MODEL_API_KEY=
+MODEL_TEMPERATURE=1.0
+
+GROUND_MODEL=ByteDance-Seed/UI-TARS-1.5-7B
+GROUND_PROVIDER=parasail
+GROUND_URL=https://api.parasail.io/v1
+GROUND_API_KEY=psk-pennaakabNsE-FpIkke7FoKW74mCPaV2L

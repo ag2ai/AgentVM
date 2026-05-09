@@ -1,0 +1,17 @@
+init:
+  provider_name: docker
+  path_to_vm: /home/yiran/osworld/docker_vm_data/Ubuntu.actions.qcow2
+  os_type: Ubuntu
+  headless: false
+
+# Generic setup: register all available actions (from ./actions).
+setup_config:
+  - type: register_action
+    parameters:
+      actions:
+        - local_path: actions/execute_bash
+        - local_path: actions/file_reader
+        - local_path: actions/pandoc_converter
+        - local_path: actions/run_python
+        - local_path: actions/str_replace_editor
+        - local_path: actions/text_web_browser
