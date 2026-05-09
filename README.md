@@ -3,6 +3,8 @@
 AgentVM provides a desktop automation environment for LLM agents to interact with virtual machines through GUI and text-based actions. It is designed to be flexible to mount any skills and tools to be used in one unified Virtual Machine.
 
 ## 🎉 News
+- **[2026/05/09]**: The Code and Paper Uploaded.
+- **[2026/04/31]**: Our paper "Position: Digital Agents Require Unified Agent-Native Computers" is accepted by ICML Position Track 2026!
 - **[2026/04/21]**: The AgentVM repo is created. Code and Paper Coming soon!
 
 
