@@ -1,0 +1,154 @@
+#!/usr/bin/env python3
+"""Dispatcher for libreoffice_calc MCP tools."""
+
+import argparse
+import ast
+import json
+import sys
+from pathlib import Path
+
+lib_dir = Path(__file__).parent.parent / "lib"
+sys.path.insert(0, str(lib_dir))
+
+from mcp_client import McpClient
+
+ACTION_REQUIREMENTS = {
+  "get_workbook_info": [],
+  "save": [],
+  "get_column_data": [
+    "column_name"
+  ],
+  "switch_active_sheet": [
+    "sheet_name"
+  ],
+  "set_column_values": [
+    "column_name",
+    "data"
+  ],
+  "highlight_range": [
+    "range_str"
+  ],
+  "transpose_range": [
+    "source_range",
+    "target_cell"
+  ],
+  "export_to_csv": [],
+  "sort_column": [
+    "column_name"
+  ],
+  "hide_row_data": [],
+  "reorder_columns": [
+    "column_order"
+  ],
+  "create_pivot_table": [
+    "source_sheet",
+    "table_name",
+    "value_fields"
+  ],
+  "merge_cells": [
+    "range_str"
+  ],
+  "set_cell_value": [
+    "cell",
+    "value"
+  ],
+  "format_range": [
+    "range_str"
+  ],
+  "create_chart": [
+    "chart_type",
+    "data_range"
+  ],
+  "freeze_panes": [],
+  "rename_sheet": [
+    "old_name",
+    "new_name"
+  ],
+  "copy_sheet": [
+    "source_sheet"
+  ],
+  "reorder_sheets": [
+    "sheet_name",
+    "position"
+  ],
+  "set_number_format": [
+    "range_str",
+    "format_type"
+  ],
+  "adjust_column_width": [
+    "columns"
+  ],
+  "adjust_row_height": [
+    "rows"
+  ],
+  "export_to_pdf": [],
+  "set_zoom_level": [
+    "zoom_percentage"
+  ],
+  "env_info": []
+}
+
+
+def parse_json_value(value: str):
+    if value is None:
+        return None
+    for parser in (json.loads, ast.literal_eval):
+        try:
+            return parser(value)
+        except Exception:
+            continue
+    return value
+
+
+def parse_params(argv):
+    params = {}
+    i = 0
+    while i < len(argv):
+        token = argv[i]
+        if token.startswith("--"):
+            key = token[2:]
+            if i + 1 < len(argv) and not argv[i + 1].startswith("--"):
+                params[key] = parse_json_value(argv[i + 1])
+                i += 2
+            else:
+                params[key] = True
+                i += 1
+        else:
+            i += 1
+    return params
+
+
+def normalize_action(action: str) -> str:
+    return action.split(".", 1)[1] if action.startswith("libreoffice_calc.") else action
+
+
+def validate_required(action: str, params):
+    missing = []
+    for key in ACTION_REQUIREMENTS.get(action, []):
+        if key not in params or params[key] in ("", None):
+            missing.append(key)
+    if missing:
+        print(f"Error: missing required parameter(s) for {action}: {', '.join(missing)}")
+        sys.exit(2)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Call libreoffice_calc MCP tools", formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("action", help="Sub-action to run (prefix optional)")
+    args, unknown = parser.parse_known_args()
+
+    action = normalize_action(args.action)
+    if action not in ACTION_REQUIREMENTS:
+        print(f"Error: unsupported action '{action}'. Allowed actions: {', '.join(sorted(ACTION_REQUIREMENTS))}")
+        sys.exit(1)
+
+    params = parse_params(unknown)
+    validate_required(action, params)
+
+    tool_name = args.action if args.action.startswith("libreoffice_calc.") else f"libreoffice_calc.{action}"
+    result = McpClient.call_tool(tool_name, params if params else None)
+    print(result)
+
+
+if __name__ == "__main__":
+    main()

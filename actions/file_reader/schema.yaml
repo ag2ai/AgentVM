@@ -1,0 +1,34 @@
+actions:
+  file_reader:
+    signature: |
+      file_reader <command> <path> [<query>]
+    docstring: >
+      Custom file reading and navigation tool for viewing and searching through files
+      * State is persistent across command calls and discussions with the user
+      * The `open_file` command opens a file for viewing and displays the first page
+      * Use `page_up` and `page_down` commands to navigate through the file content
+      * The `find` command searches for a query string in the file (like Ctrl-F)
+      * The `find_next` command moves to the next occurrence of the previously searched query
+      * File viewing is paginated to handle large files efficiently
+
+      Notes for using the file_reader commands:
+      * The `path` parameter should be an absolute or relative path to the file
+      * The `query` parameter is required for `find` command and optional for `find_next` (uses previous query if not provided)
+      * Navigation state is maintained between commands for the same file
+    arguments:
+      - name: command
+        type: string
+        description: "Command to perform on the file. Allowed options are: `open_file`, `page_up`, `page_down`, `find`, `find_next`."
+        required: true
+        enum: ["open_file", "page_up", "page_down", "find", "find_next"]
+      - name: path
+        type: string
+        description: "Path to the file, e.g. `/testbed/file.py` or `./relative/path/file.txt`."
+        required: true
+      - name: query
+        type: string
+        description: "Query to search for in the file. Required for `find` command, optional for other commands."
+        required: false
+        argument_format: "--query {{value}}"
+    meta:
+      related_app: null

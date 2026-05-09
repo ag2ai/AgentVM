@@ -1,0 +1,228 @@
+#!/usr/bin/env python3
+"""File reader execution action that provides file viewing and navigation capabilities.
+This action maintains state across calls using a state.json file.
+"""
+
+import argparse
+import json
+import os
+import sys
+from pathlib import Path
+from dataclasses import asdict
+from typing import Optional
+
+# Add the parent directory to the path to import the lib
+action_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(action_dir))
+sys.path.insert(0, str(action_dir.parent.parent))  # Add OSWorld root for ag2agent imports
+
+from lib.file_env import FileEnv, FileStatus
+
+
+class FileReaderAction:
+    """
+    A file reader action that allows agents to view and navigate through files.
+    """
+
+    name = "file_reader"
+    
+    def __init__(self, state_file: Optional[str] = None):
+        """Initialize the file reader action.
+        
+        Args:
+            state_file: Path to the state.json file for persistence
+        """
+        if state_file is None:
+            # Default to the file_reader directory
+            action_dir = Path(__file__).parent.parent
+            state_file = action_dir / "state.json"
+        
+        self.state_file = Path(state_file)
+        self.working_dir = os.getcwd()
+        
+        # Initialize or load the file environment
+        self.file_env = self._load_state()
+    
+    def _load_state(self) -> FileEnv:
+        """Load the FileEnv state from state.json if it exists."""
+        file_env = FileEnv(
+            working_dir=self.working_dir,
+            viewport_size=1024 * 8,
+            max_opened_files=2
+        )
+        
+        if self.state_file.exists():
+            try:
+                with open(self.state_file, 'r') as f:
+                    state_data = json.load(f)
+                
+                # Restore the file environment state
+                if 'open_files' in state_data:
+                    for abs_path, file_data in state_data['open_files'].items():
+                        file_status = FileStatus(
+                            abs_path=file_data['abs_path'],
+                            full_content=file_data['full_content'],
+                            curr_page_idx=file_data['curr_page_idx'],
+                            view_port_pages=[tuple(p) for p in file_data['view_port_pages']],
+                            last_find_query=file_data.get('last_find_query', ''),
+                            find_matches=file_data.get('find_matches', []),
+                            find_count=file_data.get('find_count', 0)
+                        )
+                        file_env.open_files[abs_path] = file_status
+                
+                if 'closed_files' in state_data:
+                    for abs_path, file_data in state_data['closed_files'].items():
+                        file_status = FileStatus(
+                            abs_path=file_data['abs_path'],
+                            full_content=file_data['full_content'],
+                            curr_page_idx=file_data['curr_page_idx'],
+                            view_port_pages=[tuple(p) for p in file_data['view_port_pages']],
+                            last_find_query=file_data.get('last_find_query', ''),
+                            find_matches=file_data.get('find_matches', []),
+                            find_count=file_data.get('find_count', 0)
+                        )
+                        file_env.closed_files[abs_path] = file_status
+                
+                if 'file_usage_order' in state_data:
+                    file_env.file_usage_order = state_data['file_usage_order']
+                
+                if 'operation_history' in state_data:
+                    file_env.operation_history = state_data['operation_history']
+                
+            except (json.JSONDecodeError, KeyError, TypeError) as e:
+                # If state file is corrupted, start fresh
+                print(f"Warning: Could not load state file: {e}. Starting with fresh state.", file=sys.stderr)
+        
+        return file_env
+    
+    def _save_state(self):
+        """Save the current FileEnv state to state.json."""
+        state_data = {
+            'open_files': {},
+            'closed_files': {},
+            'file_usage_order': self.file_env.file_usage_order,
+            'operation_history': self.file_env.operation_history
+        }
+        
+        # Serialize open files
+        for abs_path, file_status in self.file_env.open_files.items():
+            state_data['open_files'][abs_path] = {
+                'abs_path': file_status.abs_path,
+                'full_content': file_status.full_content,
+                'curr_page_idx': file_status.curr_page_idx,
+                'view_port_pages': file_status.view_port_pages,
+                'last_find_query': file_status.last_find_query,
+                'find_matches': file_status.find_matches,
+                'find_count': file_status.find_count
+            }
+        
+        # Serialize closed files
+        for abs_path, file_status in self.file_env.closed_files.items():
+            state_data['closed_files'][abs_path] = {
+                'abs_path': file_status.abs_path,
+                'full_content': file_status.full_content,
+                'curr_page_idx': file_status.curr_page_idx,
+                'view_port_pages': file_status.view_port_pages,
+                'last_find_query': file_status.last_find_query,
+                'find_matches': file_status.find_matches,
+                'find_count': file_status.find_count
+            }
+        
+        # Ensure the directory exists
+        self.state_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Write the state file
+        with open(self.state_file, 'w') as f:
+            json.dump(state_data, f, indent=2)
+    
+    def __call__(
+        self,
+        *,
+        command: str,
+        path: str,
+        query: Optional[str] = None,
+        **kwargs
+    ):
+        """Execute a file reader command.
+        
+        Args:
+            command: The command to perform (open_file, page_up, page_down, find, find_next)
+            path: Path to the file
+            query: Search query (required for find command)
+        """
+        action = command
+        # Validate action
+        valid_actions = ["open_file", "page_up", "page_down", "find", "find_next"]
+        if action not in valid_actions:
+            print(f'Unrecognized action "{action}". The allowed actions for the {self.name} tool are: {", ".join(valid_actions)}')
+            sys.exit(1)
+        
+        # Validate path
+        if not path:
+            print("Error: path parameter is required")
+            sys.exit(2)
+        
+        # Validate query for find action
+        if action == "find" and not query:
+            print("Error: query parameter is required for 'find' action")
+            sys.exit(3)
+        
+        # Execute the action using FileEnv
+        try:
+            result = self.file_env.step(action=action, path=path, query=query)
+            
+            # Save state after each operation
+            self._save_state()
+            
+            # Print the output (result is a string from step method)
+            print(result)
+            
+            # Check if result indicates an error
+            if "error:" in result.lower():
+                sys.exit(4)
+            
+        except Exception as e:
+            print(f"Error executing action '{action}': {str(e)}")
+            sys.exit(5)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="File reader action for viewing and navigating through files"
+    )
+    parser.add_argument(
+        "command",
+        type=str,
+        help="Command to perform: open_file, page_up, page_down, find, find_next"
+    )
+    parser.add_argument(
+        "path",
+        type=str,
+        help="Path to the file"
+    )
+    parser.add_argument(
+        "--query",
+        type=str,
+        default=None,
+        help="Query to search for in the file (required for find action)"
+    )
+    parser.add_argument(
+        "--state-file",
+        type=str,
+        default=None,
+        help="Path to the state file (default: <action_dir>/state.json)"
+    )
+    
+    args = parser.parse_args()
+    
+    # Create and execute the action
+    action = FileReaderAction(state_file=args.state_file)
+    action(
+        command=args.command,
+        path=args.path,
+        query=args.query
+    )
+
+
+if __name__ == "__main__":
+    main()

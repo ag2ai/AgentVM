@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+"""Dispatcher for vlc MCP tools."""
+
+import argparse
+import ast
+import json
+import sys
+from pathlib import Path
+
+lib_dir = Path(__file__).parent.parent / "lib"
+sys.path.insert(0, str(lib_dir))
+
+from mcp_client import McpClient
+
+ACTION_REQUIREMENTS = {
+  "get_playlist": [],
+  "play": [],
+  "pause": [],
+  "next": [],
+  "previous": [],
+  "add_to_playlist": [
+    "uri"
+  ],
+  "get_current_time": [],
+  "get_media_duration": [],
+  "toggle_fullscreen": [],
+  "get_settings": [],
+  "set_settings": [
+    "field",
+    "value"
+  ],
+  "get_media_files": [
+    "path"
+  ]
+}
+
+
+def parse_json_value(value: str):
+    if value is None:
+        return None
+    for parser in (json.loads, ast.literal_eval):
+        try:
+            return parser(value)
+        except Exception:
+            continue
+    return value
+
+
+def parse_params(argv):
+    params = {}
+    i = 0
+    while i < len(argv):
+        token = argv[i]
+        if token.startswith("--"):
+            key = token[2:]
+            if i + 1 < len(argv) and not argv[i + 1].startswith("--"):
+                params[key] = parse_json_value(argv[i + 1])
+                i += 2
+            else:
+                params[key] = True
+                i += 1
+        else:
+            i += 1
+    return params
+
+
+def normalize_action(action: str) -> str:
+    return action.split(".", 1)[1] if action.startswith("vlc.") else action
+
+
+def validate_required(action: str, params):
+    missing = []
+    for key in ACTION_REQUIREMENTS.get(action, []):
+        if key not in params or params[key] in ("", None):
+            missing.append(key)
+    if missing:
+        print(f"Error: missing required parameter(s) for {action}: {', '.join(missing)}")
+        sys.exit(2)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Call vlc MCP tools", formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("action", help="Sub-action to run (prefix optional)")
+    args, unknown = parser.parse_known_args()
+
+    action = normalize_action(args.action)
+    if action not in ACTION_REQUIREMENTS:
+        print(f"Error: unsupported action '{action}'. Allowed actions: {', '.join(sorted(ACTION_REQUIREMENTS))}")
+        sys.exit(1)
+
+    params = parse_params(unknown)
+    validate_required(action, params)
+
+    tool_name = args.action if args.action.startswith("vlc.") else f"vlc.{action}"
+    result = McpClient.call_tool(tool_name, params if params else None)
+    print(result)
+
+
+if __name__ == "__main__":
+    main()

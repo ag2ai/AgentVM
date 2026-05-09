@@ -1,0 +1,11 @@
+{
+  "viewport_size": 8192,
+  "cache_folder": "./tmp/cache",
+  "request_kwargs": {
+    "headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0"
+    }
+  },
+  "serper_key": "c0210085fdef2b98bd222f7b17f6262ca0ec92df",
+  "start_page": "about:blank"
+}

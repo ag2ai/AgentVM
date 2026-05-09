@@ -1,0 +1,136 @@
+#!/usr/bin/env python3
+"""Pandoc converter action that converts markdown files to docx or other formats.
+This action uses the pandoc command-line tool to perform the conversion.
+"""
+
+import argparse
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+
+class PandocConverter:
+    """
+    A pandoc converter action that allows agents to convert markdown files to various formats.
+    """
+
+    name = "pandoc_converter"
+    
+    def __init__(self):
+        """Initialize the pandoc converter action."""
+        self.working_dir = os.getcwd()
+    
+    def check_pandoc_installed(self) -> bool:
+        """Check if pandoc is installed on the system."""
+        try:
+            result = subprocess.run(
+                ['pandoc', '--version'],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            return result.returncode == 0
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            return False
+    
+    def convert(self, input_file: str, output_file: str, format: str = None) -> str:
+        """Convert a markdown file to the specified format using pandoc.
+        
+        Args:
+            input_file: Path to the input markdown file
+            output_file: Path to the output file
+            format: Output format (default: inferred from output_file extension)
+        
+        Returns:
+            A message indicating success or failure
+        """
+        # Check if pandoc is installed
+        if not self.check_pandoc_installed():
+            return "ERROR: pandoc is not installed on the system. Please install pandoc first.\nYou can install it with: sudo apt-get install pandoc (Ubuntu/Debian) or brew install pandoc (macOS)"
+        
+        # Convert relative paths to absolute paths
+        input_path = Path(input_file)
+        if not input_path.is_absolute():
+            input_path = Path(self.working_dir) / input_path
+        
+        output_path = Path(output_file)
+        if not output_path.is_absolute():
+            output_path = Path(self.working_dir) / output_path
+        
+        # Check if input file exists
+        if not input_path.exists():
+            return f"ERROR: Input file does not exist: {input_path}"
+        
+        # Check if input file is readable
+        if not os.access(input_path, os.R_OK):
+            return f"ERROR: Input file is not readable: {input_path}"
+        
+        # Create output directory if it doesn't exist
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Build pandoc command
+        cmd = ['pandoc', str(input_path), '-o', str(output_path)]
+        
+        # Add format if specified
+        if format:
+            cmd.extend(['-t', format])
+        
+        # Execute pandoc
+        try:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+            
+            if result.returncode == 0:
+                return f"SUCCESS: Converted {input_path} to {output_path}\n{result.stdout}"
+            else:
+                return f"ERROR: Pandoc conversion failed with return code {result.returncode}\nSTDERR: {result.stderr}\nSTDOUT: {result.stdout}"
+        
+        except subprocess.TimeoutExpired:
+            return f"ERROR: Pandoc conversion timed out after 60 seconds"
+        except Exception as e:
+            return f"ERROR: An unexpected error occurred: {str(e)}"
+
+
+def main():
+    """Main entry point for the pandoc_converter action."""
+    parser = argparse.ArgumentParser(
+        description='Convert markdown files to docx or other formats using pandoc'
+    )
+    parser.add_argument(
+        'input_file',
+        type=str,
+        help='Path to the input markdown file'
+    )
+    parser.add_argument(
+        'output_file',
+        type=str,
+        help='Path to the output file'
+    )
+    parser.add_argument(
+        '--format',
+        type=str,
+        default=None,
+        help='Output format (default: inferred from output file extension)'
+    )
+    
+    args = parser.parse_args()
+    
+    converter = PandocConverter()
+    result = converter.convert(args.input_file, args.output_file, args.format)
+    
+    print(result)
+    
+    # Exit with appropriate code
+    if result.startswith("ERROR"):
+        sys.exit(1)
+    else:
+        sys.exit(0)
+
+
+if __name__ == '__main__':
+    main()

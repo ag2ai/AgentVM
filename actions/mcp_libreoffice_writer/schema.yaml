@@ -1,0 +1,167 @@
+actions:
+  libreoffice_writer:
+    signature: libreoffice_writer <action> [<alignment>] [<bold>] [<color>] [<font_name>] [<font_size>] [<format>] [<formula>]
+      [<height>] [<image_path>] [<include_comments>] [<italic>] [<output_filename>] [<output_path>] [<paragraph_indices>]
+      [<pattern>] [<position>] [<quality>] [<replacement>] [<size>] [<spacing_value>] [<start_number>] [<text>] [<width>]
+    docstring: |-
+      Entry point for LibreOffice Writer MCP tools. Choose a sub-action and supply its parameters.
+
+      Available actions:
+      - add_page_numbers: Adds page numbers to the document at the specified position. (required: position; optional: start_number, format)
+      - env_info: Retrieve all paragraphs, truncate each to at most 500 characters, and return them concatenated as a single formatted string. It should be called first to obtain the information before other tools that depend on the results are invoked.
+      - export_to_pdf: Exports the current document to PDF format. (optional: output_path, output_filename, include_comments, quality)
+      - find_and_replace: Finds all occurrences of a specified text pattern and replaces them with another text in the document. (required: pattern, replacement; optional: paragraph_indices)
+      - insert_formula_at_cursor: Inserts a formula at the current cursor position in the document. (required: formula)
+      - insert_image_at_cursor: Inserts an image at the current cursor position in the document. (required: image_path; optional: width, height)
+      - insert_page_break: Inserts a page break at the current cursor position, creating a new blank page after the current one. (optional: position)
+      - save: Save the current document to its current location
+      - set_color: Changes the color of matched text in the document for specified paragraphs. (required: pattern, color; optional: paragraph_indices)
+      - set_default_font: Sets the default font for new text in the document without changing existing text. (required: font_name; optional: font_size)
+      - set_font: Changes the font of text in the document or specified paragraphs. (required: font_name; optional: paragraph_indices)
+      - set_font_size: Changes the font size of specified text in the document. (required: font_size, pattern; optional: paragraph_indices)
+      - set_line_spacing: Sets the line spacing for specified paragraphs in the document. (required: spacing_value; optional: paragraph_indices)
+      - set_paragraph_alignment: Sets the text alignment for specified paragraphs in the document. (required: alignment; optional: paragraph_indices)
+      - write_text: Write text at the current cursor position in the document. (required: text; optional: bold, italic, size)
+    arguments:
+    - name: action
+      type: string
+      description: 'Sub-action to run. Allowed options: add_page_numbers, env_info, export_to_pdf, find_and_replace, insert_formula_at_cursor,
+        insert_image_at_cursor, insert_page_break, save, set_color, set_default_font, set_font, set_font_size, set_line_spacing,
+        set_paragraph_alignment, write_text.'
+      required: true
+      enum:
+      - add_page_numbers
+      - env_info
+      - export_to_pdf
+      - find_and_replace
+      - insert_formula_at_cursor
+      - insert_image_at_cursor
+      - insert_page_break
+      - save
+      - set_color
+      - set_default_font
+      - set_font
+      - set_font_size
+      - set_line_spacing
+      - set_paragraph_alignment
+      - write_text
+    - name: alignment
+      type: string
+      description: The alignment to apply ('left', 'center', 'right', 'justify').
+      required: false
+      argument_format: --alignment {{value}}
+    - name: bold
+      type: boolean
+      description: Optional. Whether to write the text in bold.
+      required: false
+      argument_format: --bold {{value}}
+    - name: color
+      type: number
+      description: The color to apply, should be a hex color code, like 0x000000 for black
+      required: false
+      argument_format: --color {{value}}
+    - name: font_name
+      type: string
+      description: The name of the font to apply (e.g., 'Times New Roman', 'Arial', 'Calibri')
+      required: false
+      argument_format: --font_name {{value}}
+    - name: font_size
+      type: number
+      description: The font size to apply (in points).
+      required: false
+      argument_format: --font_size {{value}}
+    - name: format
+      type: string
+      description: Optional. Format of the page numbers (e.g., '1', 'Page 1', '1 of N'). Defaults to simple number format.
+      required: false
+      argument_format: --format {{value}}
+    - name: formula
+      type: string
+      description: The formula to insert at the current cursor position.
+      required: false
+      argument_format: --formula {{value}}
+    - name: height
+      type: integer
+      description: Optional. Height to display the image in pixels. If not specified, uses the original image height.
+      required: false
+      argument_format: --height {{value}}
+    - name: image_path
+      type: string
+      description: Full path to the image file to insert
+      required: false
+      argument_format: --image_path {{value}}
+    - name: include_comments
+      type: boolean
+      description: Optional. Whether to include comments in the exported PDF. Defaults to false.
+      required: false
+      argument_format: --include_comments {{value}}
+    - name: italic
+      type: boolean
+      description: Optional. Whether to write the text in italic.
+      required: false
+      argument_format: --italic {{value}}
+    - name: output_filename
+      type: string
+      description: Optional. The filename to use for the PDF. If not provided, uses the original document's filename with
+        .pdf extension.
+      required: false
+      argument_format: --output_filename {{value}}
+    - name: output_path
+      type: string
+      description: Optional. The full path where the PDF should be saved. If not provided, uses the same location as the original
+        document with .pdf extension.
+      required: false
+      argument_format: --output_path {{value}}
+    - name: paragraph_indices
+      type: array
+      description: Optional. Indices of paragraphs to modify (0-based indexing). If not provided, applies to all paragraphs.
+      required: false
+      argument_format: --paragraph_indices "{{value}}"
+    - name: pattern
+      type: string
+      description: The pattern to match in the document, should be a regular expression
+      required: false
+      argument_format: --pattern {{value}}
+    - name: position
+      type: string
+      description: Position of the page numbers ('bottom_left', 'bottom_center', 'bottom_right', 'top_left', 'top_center',
+        'top_right')
+      required: false
+      argument_format: --position {{value}}
+    - name: quality
+      type: string
+      description: Optional. The quality of the PDF export ('standard', 'high', 'print'). Defaults to 'standard'.
+      required: false
+      argument_format: --quality {{value}}
+    - name: replacement
+      type: string
+      description: The text to replace the found text with.
+      required: false
+      argument_format: --replacement {{value}}
+    - name: size
+      type: number
+      description: Optional. The size of the text.
+      required: false
+      argument_format: --size {{value}}
+    - name: spacing_value
+      type: number
+      description: The line spacing value to apply (1.0 for single spacing, 2.0 for double spacing, etc.).
+      required: false
+      argument_format: --spacing_value {{value}}
+    - name: start_number
+      type: integer
+      description: Optional. The starting page number. Defaults to 1.
+      required: false
+      argument_format: --start_number {{value}}
+    - name: text
+      type: string
+      description: The text to write at the current cursor position.
+      required: false
+      argument_format: --text {{value}}
+    - name: width
+      type: integer
+      description: Optional. Width to display the image in pixels. If not specified, uses the original image width.
+      required: false
+      argument_format: --width {{value}}
+    meta:
+      related_app: libreoffice_writer

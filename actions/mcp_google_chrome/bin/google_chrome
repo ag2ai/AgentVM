@@ -1,0 +1,95 @@
+#!/usr/bin/env python3
+"""Dispatcher for google_chrome MCP tools."""
+
+import argparse
+import ast
+import json
+import sys
+from pathlib import Path
+
+lib_dir = Path(__file__).parent.parent / "lib"
+sys.path.insert(0, str(lib_dir))
+
+from mcp_client import McpClient
+
+ACTION_REQUIREMENTS = {
+  "chrome_open_tabs_setup": [
+    "url"
+  ],
+  "open_profile_settings": [],
+  "open_password_settings": [],
+  "open_privacy_settings": [],
+  "open_appearance_settings": [],
+  "open_search_engine_settings": [],
+  "bring_back_last_tab": [],
+  "print": [],
+  "delete_browsing_data": [],
+  "open_extensions": [],
+  "bookmark_page": [],
+  "open_bookmarks": []
+}
+
+
+def parse_json_value(value: str):
+    if value is None:
+        return None
+    for parser in (json.loads, ast.literal_eval):
+        try:
+            return parser(value)
+        except Exception:
+            continue
+    return value
+
+
+def parse_params(argv):
+    params = {}
+    i = 0
+    while i < len(argv):
+        token = argv[i]
+        if token.startswith("--"):
+            key = token[2:]
+            if i + 1 < len(argv) and not argv[i + 1].startswith("--"):
+                params[key] = parse_json_value(argv[i + 1])
+                i += 2
+            else:
+                params[key] = True
+                i += 1
+        else:
+            i += 1
+    return params
+
+
+def normalize_action(action: str) -> str:
+    return action.split(".", 1)[1] if action.startswith("google_chrome.") else action
+
+
+def validate_required(action: str, params):
+    missing = []
+    for key in ACTION_REQUIREMENTS.get(action, []):
+        if key not in params or params[key] in ("", None):
+            missing.append(key)
+    if missing:
+        print(f"Error: missing required parameter(s) for {action}: {', '.join(missing)}")
+        sys.exit(2)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Call google_chrome MCP tools", formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("action", help="Sub-action to run (prefix optional)")
+    args, unknown = parser.parse_known_args()
+
+    action = normalize_action(args.action)
+    if action not in ACTION_REQUIREMENTS:
+        print(f"Error: unsupported action '{action}'. Allowed actions: {', '.join(sorted(ACTION_REQUIREMENTS))}")
+        sys.exit(1)
+
+    params = parse_params(unknown)
+    validate_required(action, params)
+
+    tool_name = args.action if args.action.startswith("google_chrome.") else f"google_chrome.{action}"
+    result = McpClient.call_tool(tool_name, params if params else None)
+    print(result)
+
+
+if __name__ == "__main__":
+    main()

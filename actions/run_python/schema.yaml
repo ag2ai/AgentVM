@@ -1,0 +1,19 @@
+actions:
+  run_python:
+    signature: |
+      run_python <script> [<timeout>]
+    docstring: >
+      Run a multi-line Python script and return its stdout/stderr.
+    arguments:
+      - name: script
+        type: string
+        description: "Python script content to execute in the VM."
+        required: true
+        argument_format: "--script {{value}}"
+      - name: timeout
+        type: integer
+        description: "Timeout in seconds (default: 30)."
+        required: false
+        argument_format: "--timeout {{value}}"
+    meta:
+      related_app: null

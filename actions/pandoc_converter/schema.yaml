@@ -1,0 +1,22 @@
+actions:
+  pandoc_converter:
+    signature: |
+      pandoc_converter <input_file> <output_file> [<format>]
+    docstring: >
+      Convert documents using pandoc (e.g., md -> docx).
+    arguments:
+      - name: input_file
+        type: string
+        description: "Path to the input markdown file (e.g., '/path/to/document.md')"
+        required: true
+      - name: output_file
+        type: string
+        description: "Path to the output file (e.g., '/path/to/document.docx')"
+        required: true
+      - name: format
+        type: string
+        description: "Output format (default: docx). Other options: pdf, html, epub, etc."
+        required: false
+        argument_format: "--format {{value}}"
+    meta:
+      related_app: null

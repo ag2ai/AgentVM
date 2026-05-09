@@ -1,0 +1,156 @@
+#!/usr/bin/env python3
+"""Dispatcher for libreoffice_impress MCP tools."""
+
+import argparse
+import ast
+import json
+import sys
+from pathlib import Path
+
+lib_dir = Path(__file__).parent.parent / "lib"
+sys.path.insert(0, str(lib_dir))
+
+from mcp_client import McpClient
+
+ACTION_REQUIREMENTS = {
+  "save": [],
+  "go_to_slide": [
+    "slide_index"
+  ],
+  "get_slide_count": [],
+  "set_slide_font": [
+    "slide_index",
+    "font_name"
+  ],
+  "write_text": [
+    "content",
+    "page_index",
+    "box_index"
+  ],
+  "set_style": [
+    "slide_index",
+    "box_index"
+  ],
+  "configure_auto_save": [
+    "enabled",
+    "interval_minutes"
+  ],
+  "set_background_color": [
+    "slide_index",
+    "box_index",
+    "color"
+  ],
+  "set_text_color": [
+    "slide_index",
+    "box_index",
+    "color"
+  ],
+  "delete_content": [
+    "slide_index",
+    "box_index"
+  ],
+  "set_slide_orientation": [
+    "orientation"
+  ],
+  "position_box": [
+    "slide_index",
+    "box_index",
+    "position"
+  ],
+  "insert_file": [
+    "file_path"
+  ],
+  "set_slide_background": [],
+  "save_as": [
+    "file_path"
+  ],
+  "insert_image": [
+    "slide_index",
+    "image_path"
+  ],
+  "set_text_strikethrough": [
+    "slide_index",
+    "box_index",
+    "line_numbers",
+    "apply"
+  ],
+  "set_textbox_alignment": [
+    "slide_index",
+    "box_index",
+    "alignment"
+  ],
+  "export_to_image": [
+    "file_path",
+    "format"
+  ],
+  "duplicate_slide": [
+    "slide_index",
+    "target_position"
+  ],
+  "env_info": []
+}
+
+
+def parse_json_value(value: str):
+    if value is None:
+        return None
+    for parser in (json.loads, ast.literal_eval):
+        try:
+            return parser(value)
+        except Exception:
+            continue
+    return value
+
+
+def parse_params(argv):
+    params = {}
+    i = 0
+    while i < len(argv):
+        token = argv[i]
+        if token.startswith("--"):
+            key = token[2:]
+            if i + 1 < len(argv) and not argv[i + 1].startswith("--"):
+                params[key] = parse_json_value(argv[i + 1])
+                i += 2
+            else:
+                params[key] = True
+                i += 1
+        else:
+            i += 1
+    return params
+
+
+def normalize_action(action: str) -> str:
+    return action.split(".", 1)[1] if action.startswith("libreoffice_impress.") else action
+
+
+def validate_required(action: str, params):
+    missing = []
+    for key in ACTION_REQUIREMENTS.get(action, []):
+        if key not in params or params[key] in ("", None):
+            missing.append(key)
+    if missing:
+        print(f"Error: missing required parameter(s) for {action}: {', '.join(missing)}")
+        sys.exit(2)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Call libreoffice_impress MCP tools", formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("action", help="Sub-action to run (prefix optional)")
+    args, unknown = parser.parse_known_args()
+
+    action = normalize_action(args.action)
+    if action not in ACTION_REQUIREMENTS:
+        print(f"Error: unsupported action '{action}'. Allowed actions: {', '.join(sorted(ACTION_REQUIREMENTS))}")
+        sys.exit(1)
+
+    params = parse_params(unknown)
+    validate_required(action, params)
+
+    tool_name = args.action if args.action.startswith("libreoffice_impress.") else f"libreoffice_impress.{action}"
+    result = McpClient.call_tool(tool_name, params if params else None)
+    print(result)
+
+
+if __name__ == "__main__":
+    main()

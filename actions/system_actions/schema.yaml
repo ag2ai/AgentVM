@@ -1,0 +1,44 @@
+# System actions - native Python implementations for window/app management
+# These actions are handled by PythonController methods rather than bash scripts
+
+meta:
+  native: true  # Indicates these actions are implemented in Python, not bash
+
+actions:
+  open_app:
+    signature: |
+      open_app <app_name> [<path>]
+    docstring: >
+      Launch an application. Optionally open a file or folder with it.
+      The app must be defined in software_config.json.
+    arguments:
+      - name: app_name
+        type: string
+        description: "Name of the application to launch (e.g., 'google_chrome', 'visual_studio_code')"
+        required: true
+      - name: path
+        type: string
+        description: "Optional file or folder path to open with the app"
+        required: false
+
+  close_window:
+    signature: |
+      close_window [<window_id>]
+    docstring: >
+      Close a window by its ID. If no window_id is provided, closes the current active window.
+    arguments:
+      - name: window_id
+        type: string
+        description: "Window ID to close (hex format from wmctrl). If omitted, closes current window."
+        required: false
+
+  switch_window:
+    signature: |
+      switch_window <window_id>
+    docstring: >
+      Switch focus to a window by its ID. Updates the current window state.
+    arguments:
+      - name: window_id
+        type: string
+        description: "Window ID to switch to (hex format from wmctrl)"
+        required: true

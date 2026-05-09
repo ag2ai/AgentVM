@@ -1,0 +1,19 @@
+actions:
+  execute_bash:
+    signature: |
+      execute_bash <cmd> <timeout>
+    docstring: >
+      Run a bash script and return stdout/stderr.
+    arguments:
+      - name: cmd
+        type: string
+        description: "Bash script content to execute. Supports multi-line scripts."
+        required: true
+        argument_format: "--cmd {{value}}"
+      - name: timeout
+        type: integer
+        description: "Timeout in seconds."
+        required: true
+        argument_format: "--timeout {{value}}"
+    meta:
+      related_app: null

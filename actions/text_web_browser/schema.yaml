@@ -1,0 +1,54 @@
+actions:
+  text_web_browser:
+    signature: |
+      text_web_browser <action> [<url>] [<query>] [<download_path>]
+    docstring: >
+      Custom web browsing tool for navigating and searching through web pages in text format
+
+      You can perform the following actions:
+      - search:
+          parameters: query
+          description: "Perform a Google search with the specified query and display the first page of results."
+      - visit_page:
+          parameters: url
+          description: "Visit the specified URL and display the first page of content."
+      - page_up:
+          parameters: None
+          description: "Navigate one page up in the currently viewed web page."
+      - page_down:
+          parameters: None
+          description: "Navigate one page down in the currently viewed web page."
+      - find_on_page:
+          parameters: query
+          description: "Search for a query string in the currently viewed web page."
+      - find_next:
+          parameters: None
+          description: "Move to the next occurrence of the previously searched query in the currently web page."
+      - download:
+          parameters: 
+            - url: the URL to download from
+            - download_path: the file or directory path to save the download
+          description: "Download content from the specified URL to the given file or directory path."
+    arguments:
+      - name: action
+        type: string
+        description: "Action to perform in the web browser. Allowed options are: `visit_page`, `page_up`, `page_down`, `find_on_page`, `find_next`, `download`."
+        required: true
+        enum: ["search", "visit_page", "page_up", "page_down", "find_on_page", "find_next", "download"]
+      - name: url
+        type: string
+        description: "The URL to visit or download. Required for `visit_page` and `download` actions. Can be HTTP/HTTPS URL, file:// URL, or google:search query."
+        required: false
+        argument_format: "--url {{value}}"
+      - name: query
+        type: string
+        description: "If using the `search` action, the search query string to be input into google search engine. If using the `find_on_page` action (Ctrl-F), it is the query string to search for in the current page."
+        required: false
+        argument_format: "--query {{value}}"
+      - name: download_path
+        type: string
+        description: "(Optional) File path or directory path for the download. Only used for `download` command. If a directory is specified, the filename will be extracted from the URL or Content-Disposition header."
+        required: false
+        argument_format: "--download-path {{value}}"
+    meta:
+      related_app: null

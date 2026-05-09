@@ -1,0 +1,94 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import subprocess
+import tempfile
+import uuid
+
+
+def _ensure_bash_shebang(script: str) -> str:
+    script = script or ""
+    if "#!/bin/bash" in script.splitlines()[0:1]:
+        return script
+    if script.lstrip().startswith("#!/"):
+        # Keep an existing shebang, but ensure there's a newline separation
+        return script
+    return "#!/bin/bash\n\n" + script
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Execute Bash code and return output")
+    parser.add_argument("--cmd", required=False, help="Bash script content to execute")
+    parser.add_argument(
+        "--script",
+        required=False,
+        help="DEPRECATED: use --cmd instead (kept for backward compatibility)",
+    )
+    parser.add_argument("--timeout", type=int, required=True, help="Timeout in seconds")
+
+    args = parser.parse_args()
+
+    script_content = args.cmd if args.cmd is not None else args.script
+    if not script_content:
+        print("No command provided. Use --cmd to pass the bash script.")
+        return 2
+
+    tmp_path = os.path.join(tempfile.gettempdir(), f"bash_exec_{uuid.uuid4().hex}.sh")
+
+    try:
+        script = _ensure_bash_shebang(script_content)
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            f.write(script)
+
+        try:
+            os.chmod(tmp_path, 0o755)
+        except Exception:
+            # If chmod fails (e.g., restricted FS), still attempt to run via interpreter.
+            pass
+
+        cmd = ["/bin/bash", tmp_path]
+        try:
+            result = subprocess.run(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                timeout=args.timeout,
+            )
+        except FileNotFoundError:
+            # Fallback if /bin/bash is not available
+            result = subprocess.run(
+                ["sh", tmp_path],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                timeout=args.timeout,
+            )
+
+        if result.stdout:
+            print(result.stdout, end="" if result.stdout.endswith("\n") else "\n")
+
+        return result.returncode
+
+    except subprocess.TimeoutExpired:
+        print(f"Script execution timed out after {args.timeout} seconds")
+        return 124
+
+    except FileNotFoundError as e:
+        print(f"Shell executable not found: {e}")
+        return 127
+
+    except Exception as e:
+        print(f"Failed to execute script: {e}")
+        return 1
+
+    finally:
+        try:
+            os.remove(tmp_path)
+        except Exception:
+            pass
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

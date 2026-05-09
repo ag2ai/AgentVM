@@ -1,0 +1,46 @@
+actions:
+  google_chrome:
+    signature: google_chrome <action> [<url>]
+    docstring: |-
+      Entry point for Google Chrome MCP tools. Choose a sub-action and supply its parameters.
+
+      Available actions:
+      - bookmark_page: Bookmarks the current page in the browser (equivalent to Ctrl+D).
+      - bring_back_last_tab: Restores the last-closed tab in the browser (equivalent to Ctrl+Shift+T).
+      - chrome_open_tabs_setup: Opens the entered URL. (required: url)
+      - delete_browsing_data: Opens the 'Clear browsing data' dialog in the browser (equivalent to Ctrl+Shift+Del).
+      - open_appearance_settings: Opens the appearance settings page in the browser.
+      - open_bookmarks: Opens the bookmarks page in the browser.
+      - open_extensions: Opens the extensions management page in the browser.
+      - open_password_settings: Opens the password/autofill settings page in the browser.
+      - open_privacy_settings: Opens the privacy settings page in the browser.
+      - open_profile_settings: Opens the profile settings page in the browser.
+      - open_search_engine_settings: Opens the search engine settings page in the browser.
+      - print: Opens the print dialog for the current browser page (equivalent to Ctrl+P).
+    arguments:
+    - name: action
+      type: string
+      description: 'Sub-action to run. Allowed options: bookmark_page, bring_back_last_tab, chrome_open_tabs_setup, delete_browsing_data,
+        open_appearance_settings, open_bookmarks, open_extensions, open_password_settings, open_privacy_settings, open_profile_settings,
+        open_search_engine_settings, print.'
+      required: true
+      enum:
+      - bookmark_page
+      - bring_back_last_tab
+      - chrome_open_tabs_setup
+      - delete_browsing_data
+      - open_appearance_settings
+      - open_bookmarks
+      - open_extensions
+      - open_password_settings
+      - open_privacy_settings
+      - open_profile_settings
+      - open_search_engine_settings
+      - print
+    - name: url
+      type: string
+      description: The URL entered in the browser.
+      required: false
+      argument_format: --url {{value}}
+    meta:
+      related_app: google_chrome

@@ -1,0 +1,282 @@
+#!/usr/bin/env python3
+"""Text web browser execution action that provides web browsing and navigation capabilities.
+This action maintains state across calls using a state.json file.
+"""
+
+import argparse
+import json
+import os
+import sys
+from pathlib import Path
+from typing import Optional
+
+# Add the parent directory to the path to import the lib
+action_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(action_dir))
+
+from lib.web_env import SimpleWebBrowserEnv
+
+
+class TextWebBrowserAction:
+    """
+    A text web browser action that allows agents to browse and navigate through web pages.
+    """
+
+    name = "text_web_browser"
+    
+    def __init__(self, state_file: Optional[str] = None, config_file: Optional[str] = None):
+        """Initialize the text web browser action.
+        
+        Args:
+            state_file: Path to the state.json file for persistence
+            config_file: Path to the config.json file for configuration
+        """
+        if state_file is None:
+            # Default to the text_web_browser directory
+            action_dir = Path(__file__).parent.parent
+            state_file = action_dir / "state.json"
+        
+        if config_file is None:
+            action_dir = Path(__file__).parent.parent
+            config_file = action_dir / "config.json"
+        
+        self.state_file = Path(state_file)
+        self.config_file = Path(config_file)
+        self.action_dir = Path(__file__).parent.parent
+        self.working_dir = os.getcwd()
+        
+        # Load configuration
+        self.config = self._load_config()
+        
+        # Initialize or load the web browser environment
+        self.web_env = self._load_state()
+    
+    def _load_config(self) -> dict:
+        """Load configuration from config.json."""
+        # Default configuration
+        default_config = {
+            "viewport_size": 8192,
+            "cache_folder": str(self.action_dir / "tmp" / "cache"),  # For browser cache
+            "request_kwargs": {
+                "headers": {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0"
+                }
+            },
+            "serpapi_key": None,
+            "serper_key": None,
+            "start_page": "about:blank"
+        }
+        
+        # Try to load from config file
+        if self.config_file.exists():
+            try:
+                with open(self.config_file, 'r') as f:
+                    user_config = json.load(f)
+                    default_config.update(user_config)
+            except (json.JSONDecodeError, IOError) as e:
+                print(f"Warning: Could not load config file: {e}. Using default configuration.", file=sys.stderr)
+        
+        # Ensure cache folder exists
+        cache_folder = Path(default_config["cache_folder"])
+        cache_folder.mkdir(parents=True, exist_ok=True)
+        
+        # Check for serpapi_key in environment if not in config
+        if default_config["serpapi_key"] is None:
+            default_config["serpapi_key"] = os.environ.get("SERPAPI_KEY")
+
+        # Check for serper_key in environment if not in config
+        if default_config.get("serper_key") is None:
+            default_config["serper_key"] = os.environ.get("SERPER_KEY")
+        
+        return default_config
+    
+    def _load_state(self) -> SimpleWebBrowserEnv:
+        """Load the SimpleWebBrowserEnv state from state.json if it exists."""
+        web_env = SimpleWebBrowserEnv(
+            name="SimpleWebBrowserEnv",
+            description="A simple text-based web browser environment.",
+            start_page=self.config.get("start_page", "about:blank"),
+            viewport_size=self.config.get("viewport_size", 8192),
+            cache_folder=self.config.get("cache_folder"),
+            serpapi_key=self.config.get("serpapi_key"),
+            serper_key=self.config.get("serper_key"),
+            request_kwargs=self.config.get("request_kwargs")
+        )
+        
+        if self.state_file.exists():
+            try:
+                with open(self.state_file, 'r') as f:
+                    state_data = json.load(f)
+                
+                # Restore the web environment state
+                if 'history' in state_data:
+                    web_env.history = [tuple(h) for h in state_data['history']]
+                
+                if 'page_title' in state_data:
+                    web_env.page_title = state_data['page_title']
+                
+                if 'viewport_current_page' in state_data:
+                    web_env.viewport_current_page = state_data['viewport_current_page']
+                
+                if 'viewport_pages' in state_data:
+                    web_env.viewport_pages = [tuple(p) for p in state_data['viewport_pages']]
+                
+                if 'address_mapper' in state_data:
+                    web_env.address_mapper = state_data['address_mapper']
+                
+                if '_page_content' in state_data:
+                    web_env._page_content = state_data['_page_content']
+                
+                if '_find_on_page_query' in state_data:
+                    web_env._find_on_page_query = state_data['_find_on_page_query']
+                
+                if '_find_on_page_last_result' in state_data:
+                    web_env._find_on_page_last_result = state_data['_find_on_page_last_result']
+                
+            except (json.JSONDecodeError, KeyError, TypeError) as e:
+                # If state file is corrupted, start fresh
+                print(f"Warning: Could not load state file: {e}. Starting with fresh state.", file=sys.stderr)
+        
+        return web_env
+    
+    def _save_state(self):
+        """Save the current SimpleWebBrowserEnv state to state.json."""
+        state_data = {
+            'history': self.web_env.history,
+            'page_title': self.web_env.page_title,
+            'viewport_current_page': self.web_env.viewport_current_page,
+            'viewport_pages': self.web_env.viewport_pages,
+            'address_mapper': self.web_env.address_mapper,
+            '_page_content': self.web_env._page_content,
+            '_find_on_page_query': self.web_env._find_on_page_query,
+            '_find_on_page_last_result': self.web_env._find_on_page_last_result
+        }
+        
+        # Ensure the directory exists
+        self.state_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Write the state file
+        with open(self.state_file, 'w') as f:
+            json.dump(state_data, f, indent=2)
+    
+    def __call__(
+        self,
+        *,
+        action: str,
+        url: Optional[str] = None,
+        query: Optional[str] = None,
+        download_path: Optional[str] = None,
+        **kwargs
+    ):
+        """Execute a text web browser action.
+        
+        Args:
+            action: The action to perform (visit_page, page_up, page_down, find_on_page, find_next, download)
+            url: URL to visit or download (required for visit_page and download actions)
+            query: Search query (required for find_on_page action)
+            download_path: File or directory path for download (required for download action)
+        """
+        # Validate action
+        valid_actions = ["visit_page", "page_up", "page_down", "find_on_page", "find_next", "download", "search"]
+        if action not in valid_actions:
+            print(f'Unrecognized action "{action}". The allowed actions for the {self.name} tool are: {", ".join(valid_actions)}')
+            sys.exit(1)
+        
+        # Validate url for visit_page, download, and search actions
+        if action == "visit_page" and not url:
+            print("Error: url parameter is required for 'visit_page' action")
+            sys.exit(2)
+        
+        if action == "download" and not url:
+            print("Error: url parameter is required for 'download' action")
+            sys.exit(2)
+        
+        # Validate download_path for download action
+        if action == "download" and not download_path:
+            print("Error: download_path parameter is required for 'download' action")
+            sys.exit(2)
+        
+        # Validate query for find_on_page action
+        if action == "find_on_page" and not query:
+            print("Error: query parameter is required for 'find_on_page' action")
+            sys.exit(3)
+        
+        if action == "search" and not query:
+            print("Error: query parameter is required for 'search' action")
+            sys.exit(3)
+        
+        # Execute the action using SimpleWebBrowserEnv
+        try:
+            result = self.web_env.step(action=action, url=url, query=query, path=download_path)
+            
+            # Save state after each operation
+            self._save_state()
+            
+            # Print the output (result is a string from step method)
+            print(result)
+            
+            # Check if result indicates an error
+            if "error:" in result.lower():
+                sys.exit(4)
+            
+        except Exception as e:
+            print(f"Error executing action '{action}': {str(e)}")
+            import traceback
+            traceback.print_exc()
+            sys.exit(5)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Text web browser action for browsing and navigating through web pages"
+    )
+    parser.add_argument(
+        "action",
+        type=str,
+        help="Action to perform: visit_page, page_up, page_down, find_on_page, find_next, download"
+    )
+    parser.add_argument(
+        "--url",
+        type=str,
+        default=None,
+        help="URL to visit or download (required for visit_page and download actions)"
+    )
+    parser.add_argument(
+        "--query",
+        type=str,
+        default=None,
+        help="Query to search for in the page (required for find_on_page action)"
+    )
+    parser.add_argument(
+        "--download-path",
+        type=str,
+        default=None,
+        help="File or directory path for download (required for download action)"
+    )
+    parser.add_argument(
+        "--state-file",
+        type=str,
+        default=None,
+        help="Path to the state file (default: <action_dir>/state.json)"
+    )
+    parser.add_argument(
+        "--config-file",
+        type=str,
+        default=None,
+        help="Path to the config file (default: <action_dir>/config.json)"
+    )
+    
+    args = parser.parse_args()
+    
+    # Create and execute the action
+    action = TextWebBrowserAction(state_file=args.state_file, config_file=args.config_file)
+    action(
+        action=args.action,
+        url=args.url,
+        query=args.query,
+        download_path=args.download_path
+    )
+
+
+if __name__ == "__main__":
+    main()

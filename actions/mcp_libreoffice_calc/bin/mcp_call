@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+"""
+Generic MCP tool caller.
+Usage: mcp_call <tool_name> [--param1 value1] [--param2 value2] ...
+
+This script is used by all MCP action bundles to call MCP tools.
+The tool_name should be the full MCP tool name (e.g., 'libreoffice_calc.get_workbook_info').
+"""
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+# Add lib directory to path
+lib_dir = Path(__file__).parent.parent / "lib"
+sys.path.insert(0, str(lib_dir))
+
+from mcp_client import McpClient
+
+
+def parse_json_value(value: str):
+    """Try to parse value as JSON, return as-is if not valid JSON."""
+    if value is None:
+        return None
+    try:
+        return json.loads(value)
+    except (json.JSONDecodeError, TypeError):
+        return value
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Call an MCP tool with parameters",
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "tool_name",
+        help="The MCP tool name (e.g., 'libreoffice_calc.get_workbook_info')"
+    )
+    parser.add_argument(
+        "--params",
+        type=str,
+        default="{}",
+        help="JSON string of parameters for the MCP tool"
+    )
+    
+    # Parse known args, collect unknown args as additional params
+    args, unknown = parser.parse_known_args()
+    
+    # Parse params from --params JSON string
+    try:
+        params = json.loads(args.params)
+    except json.JSONDecodeError:
+        params = {}
+    
+    # Parse additional --key value pairs from unknown args
+    i = 0
+    while i < len(unknown):
+        if unknown[i].startswith('--'):
+            key = unknown[i][2:]
+            if i + 1 < len(unknown) and not unknown[i + 1].startswith('--'):
+                params[key] = parse_json_value(unknown[i + 1])
+                i += 2
+            else:
+                params[key] = True
+                i += 1
+        else:
+            i += 1
+    
+    # Call the MCP tool
+    result = McpClient.call_tool(args.tool_name, params if params else None)
+    print(result)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,102 @@
+actions:
+  code:
+    signature: code <action> [<category>] [<character>] [<extension_id>] [<file1>] [<file2>] [<file_path>] [<folder>] [<line>]
+      [<path>] [<pre_release>] [<show_versions>] [<state>]
+    docstring: |-
+      Entry point for VSCode MCP tools. Choose a sub-action and supply its parameters.
+
+      Available actions:
+      - add_folder: Adds a folder to the last active window in VSCode (required: folder)
+      - compare_files: Compares two files in VSCode (required: file1, file2)
+      - disable_extension: Disables a specific extension for the next instance of VSCode (required: extension_id)
+      - goto_file: Opens a file at a specific line and character position (required: file_path; optional: line, character)
+      - install_extension: Installs an extension or updates it in VSCode (required: extension_id; optional: pre_release)
+      - launch_vscode: Launches Visual Studio Code with the specified file path or directory (required: path)
+      - list_extensions: Lists installed extensions in VSCode (optional: show_versions, category)
+      - remove_folder: Removes a folder from the last active window in VSCode (required: folder)
+      - toggle_sync: Toggles synchronization on or off in VSCode (required: state)
+      - uninstall_extension: Uninstalls an extension from VSCode (required: extension_id)
+      - update_extensions: Updates all installed extensions in VSCode to the latest version
+    arguments:
+    - name: action
+      type: string
+      description: 'Sub-action to run. Allowed options: add_folder, compare_files, disable_extension, goto_file, install_extension,
+        launch_vscode, list_extensions, remove_folder, toggle_sync, uninstall_extension, update_extensions.'
+      required: true
+      enum:
+      - add_folder
+      - compare_files
+      - disable_extension
+      - goto_file
+      - install_extension
+      - launch_vscode
+      - list_extensions
+      - remove_folder
+      - toggle_sync
+      - uninstall_extension
+      - update_extensions
+    - name: category
+      type: string
+      description: The category to filter extensions by
+      required: false
+      argument_format: --category {{value}}
+    - name: character
+      type: integer
+      description: The character position to navigate to
+      required: false
+      argument_format: --character {{value}}
+    - name: extension_id
+      type: string
+      description: The identifier of the extension
+      required: false
+      argument_format: --extension_id {{value}}
+    - name: file1
+      type: string
+      description: The path to the first file
+      required: false
+      argument_format: --file1 {{value}}
+    - name: file2
+      type: string
+      description: The path to the second file
+      required: false
+      argument_format: --file2 {{value}}
+    - name: file_path
+      type: string
+      description: The file path to open
+      required: false
+      argument_format: --file_path {{value}}
+    - name: folder
+      type: string
+      description: The folder path to add
+      required: false
+      argument_format: --folder {{value}}
+    - name: line
+      type: integer
+      description: The line number to navigate to
+      required: false
+      argument_format: --line {{value}}
+    - name: path
+      type: string
+      description: The file path or directory to open in VS Code
+      required: false
+      argument_format: --path {{value}}
+    - name: pre_release
+      type: boolean
+      description: Whether to install the pre-release version
+      required: false
+      argument_format: --pre_release {{value}}
+    - name: show_versions
+      type: boolean
+      description: Whether to show extension versions
+      required: false
+      argument_format: --show_versions {{value}}
+    - name: state
+      type: string
+      description: The state to set ('on' or 'off')
+      required: false
+      argument_format: --state {{value}}
+      enum:
+      - 'on'
+      - 'off'
+    meta:
+      related_app: vscode
