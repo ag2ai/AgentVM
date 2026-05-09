@@ -1,0 +1,15 @@
+This repository is based in part on OSWorld.
+
+Portions of this repository are derived from or adapted from OSWorld:
+  OSWorld
+  Copyright 2024 XLANG NLP Lab
+  Licensed under the Apache License, Version 2.0
+
+Modifications and additional work in this repository:
+  Copyright 2026 AG2AI
+  Licensed under the Apache License, Version 2.0
+
+A copy of the Apache License, Version 2.0 is provided in the LICENSE file.
+
+If you modify files derived from OSWorld, keep the existing copyright and
+license notices, and add a prominent note that you changed those files.

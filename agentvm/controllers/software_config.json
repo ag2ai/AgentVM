@@ -1,0 +1,17 @@
+{
+  "visual_studio_code": { "launch": "code --new-window", "wm_class_hint": "code" },
+  "google_chrome": { "launch": "google-chrome --new-window", "wm_class_hint": "google-chrome" },
+  "chromium": { "launch": "chromium-browser --new-window", "wm_class_hint": "chromium" },
+  "firefox": { "launch": "firefox --new-window", "wm_class_hint": "firefox" },
+  "libreoffice_writer": { "launch": "libreoffice --writer", "wm_class_hint": "libreoffice" },
+  "libreoffice_calc": { "launch": "libreoffice --calc", "wm_class_hint": "libreoffice" },
+  "libreoffice_impress": { "launch": "libreoffice --impress", "wm_class_hint": "libreoffice" },
+  "text_editor": { "launch": "gedit", "wm_class_hint": "gedit" },
+  "files": { "launch": "nautilus", "wm_class_hint": "nautilus" },
+  "terminal": { "launch": "gnome-terminal", "wm_class_hint": "gnome-terminal" },
+  "thunderbird_mail": { "launch": "thunderbird", "wm_class_hint": "thunderbird" },
+  "gui_image_manipulation_program": { "launch": "gimp", "wm_class_hint": "gimp" },
+  "vlc_media_player": { "launch": "vlc", "wm_class_hint": "vlc" },
+  "photo_viewer": { "launch": "eog", "wm_class_hint": "eog" },
+  "pdf_viewer": { "launch": "evince", "wm_class_hint": "evince" }
+}
