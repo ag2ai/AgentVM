@@ -1,5 +1,8 @@
 # AgentVM 
-[Website](https://ag2ai.github.io/agentvm-page/) [Paper](https://openreview.net/pdf?id=XZaRHkbc2u)
+
+[![Paper](https://img.shields.io/badge/paper-A42C25?style=for-the-badge&logo=arxiv&logoColor=white)](https://openreview.net/pdf?id=XZaRHkbc2u)    [![Project Page](https://ag2ai.github.io/agentvm-page/)  
+
+https://openreview.net/pdf?id=XZaRHkbc2u
 
 AgentVM provides a desktop automation environment for LLM agents to interact with virtual machines through GUI and text-based actions. It is designed to be flexible to mount any skills and tools to be used in one unified Virtual Machine.
 
