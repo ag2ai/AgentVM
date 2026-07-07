@@ -196,6 +196,15 @@ You can pre-install actions / run setups of your VM through `bake_actions.sh`. Y
 
 ## 📚 Citation
 
+```
+@inproceedings{wu2026agentnativecomputers,
+  title={Position: Digital Agents Require Unified Agent-Native Computers},
+  author={Wu, Yiran and Liu, Jiale and Zhang, Jieyu and Zhang, Yaolun and Liu, Shilong and Wang, Chi and Wang, Mengdi and Wang, Huazheng and Wu, Qingyun},
+  booktitle={International Conference on Machine Learning},
+  year={2026}
+}
+```
+
 ## 🙏 Acknowledgement
 
 AgentVM is built on top of OSWorld, and also incorporate tools from [OSWorld-MCP](https://github.com/X-PLUG/OSWorld-MCP/tree/main). Check out these awesome projects!
