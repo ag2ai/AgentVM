@@ -1,6 +1,6 @@
 # AgentVM 
 
-[![Paper](https://img.shields.io/badge/paper-A42C25?style=for-the-badge&logo=arxiv&logoColor=white)](https://openreview.net/pdf?id=XZaRHkbc2u)    [![Project Page](https://ag2ai.github.io/agentvm-page/)  
+[![Paper](https://img.shields.io/badge/paper-A42C25?style=for-the-badge&logo=arxiv&logoColor=white)](https://openreview.net/pdf?id=XZaRHkbc2u)    [![Project Page](https://img.shields.io/badge/Project%20Page-blue?style=for-the-badge&logo=snowflake&logoColor=white&labelColor=black)](https://ag2ai.github.io/agentvm-page/)  
 
 https://openreview.net/pdf?id=XZaRHkbc2u
 
